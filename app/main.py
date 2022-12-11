@@ -26,7 +26,7 @@ def handle_client(client):
         try:
             command, argument = decode_resp(client)            
             if 'echo' in command:
-                message = bytes(f"${len(argument)}\r\n{argument}\r\n")
+                message = bytes(f"${len(argument)}\r\n{argument}\r\n", 'utf-8')
                 client.send(message)
             else:
                 client.send(b"+PONG\r\n")

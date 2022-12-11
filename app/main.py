@@ -11,13 +11,13 @@ def decode_resp(client):
     delimiter = '\\r\\n'
     data = str(data).replace(delimiter, ' ').split(' ')
     
-    command = b''
-    argument = b''
+    command = ''
+    argument = ''
     for i, string in enumerate(data):
         if '$4' in string:
             command = data[i + 1]
         elif '$5' in string:
-            argument = bytes(data[i + 1], 'utf-8')
+            argument = data[i + 1]
     return command, argument
 
 

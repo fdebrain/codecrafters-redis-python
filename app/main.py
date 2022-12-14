@@ -4,6 +4,8 @@ import threading
 HOST = "localhost"
 PORT = 6379
 
+database = {}
+
 def decode_resp(client):
     data = client.recv(1024)
     print(f"Received from client: {data}")
@@ -12,22 +14,32 @@ def decode_resp(client):
     data = str(data).replace(delimiter, ' ').split(' ')
     
     command = ''
-    argument = ''
+    arguments = []
     for i, string in enumerate(data):
-        if '$4' in string:
+        if '$3' in string:
+            command = data[i + 1]
+        elif '$4' in string:
             command = data[i + 1]
         elif '$5' in string:
-            argument = data[i + 1]
-    return command, argument
+            arguments.append(data[i + 1])
+    return command, arguments
 
 
 def handle_client(client):
     while True:
         try:
-            command, argument = decode_resp(client)            
-            if 'echo' in command:
-                message = bytes(f"${len(argument)}\r\n{argument}\r\n", 'utf-8')
+            command, arguments = decode_resp(client)
+            if command == 'echo':
+                message = bytes(f"${len(arguments[0])}\r\n{arguments[0]}\r\n", 'utf-8')
                 client.send(message)
+            elif command == 'get':
+                k = arguments[0]
+                message = bytes(f"${len(k)}\r\n{k}\r\n", 'utf-8')
+                client.send(message)
+            elif command == 'set':
+                k, v = arguments
+                database[k] = v                
+                client.send(b"+OK\r\n")
             else:
                 client.send(b"+PONG\r\n")
         except ConnectionError:
